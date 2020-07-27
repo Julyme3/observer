@@ -1,0 +1,41 @@
+import firebase from 'firebase/app'
+
+export default {
+  actions: {
+    async login({dispatch, commit}, {email, password}) {
+      try {
+        await firebase.auth().signInWithEmailAndPassword(email, password)
+      } catch(e) {
+        commit('setError', e)
+        throw e
+      }
+    },
+    async register({dispatch, commit}, {email, password, name}) {
+      try {
+        await firebase.auth().createUserWithEmailAndPassword(email, password)
+        const uid = await dispatch('getUserId')
+        await firebase.database().ref(`/users/${uid}/info`).set({
+          name: name
+        })
+      } catch(e) {
+        commit('setError', e)
+        throw e
+      }
+    },
+    getUserId() {
+      const uid = firebase.auth().currentUser.uid
+      return uid 
+    },
+    async logout({commit}) {
+      try {
+        await firebase.auth().signOut()
+        commit('clearInfo')
+        commit('clearReports')
+        commit('clearStories')
+      } catch(e) {
+        commit('setError', e)
+        throw e
+      }
+    }
+  }
+}
