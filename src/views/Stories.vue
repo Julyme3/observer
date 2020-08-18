@@ -1,14 +1,19 @@
 <template>
   <div class="row">
+    <div><button @click.prevent="test">+</button> <button>-</button></div>
+    <v-zoomer ref="zoomer" style="width: 500px; height: 500px; border: solid 1px silver;">
+  <img
+    src="https://cdn.pixabay.com/photo/2016/04/20/19/47/wolf-1341881__340.jpg"
+    style="object-fit: contain; width: 100%; height: 100%;"
+  >
+</v-zoomer>
     <HeaderTitle v-bind:header-title="this.$route.params.report" />
-
-<!-- @click.prevent="clickHandler(story.name, index) -->
     <div class="list-wrapper">
-      <figure v-for="(story) in this.stories" 
+      <figure v-for="(story, idx) in items" 
         :key="story.name" 
         data-target="modal1" 
         class="card hoverable modal-trigger"
-        @click="clickHandler"
+        @click="clickStoryHandler(idx, $event)"
       >
         <div class="card-image waves-effect">
           <img :src="story.image">
@@ -17,32 +22,46 @@
           {{story.name}}
         </figcaption>
       </figure>
-
-<!-- @updated="storyUpdate" -->
       <StoryModal
         v-if="openedModal"
-       :storyData="currentStory"
+       :stories="stories"
        :isOpen="openedModal"
-     />
+       :currentStory="currentStory"
+      />
     </div>
+    <Paginate
+      v-model="page" 
+      :page-count="pageCount"
+      :page-range="3"
+      :margin-pages="2"
+      :click-handler="pageChangeHandler"
+      :prev-text="'Назад'"
+      :next-text="'Вперед'"
+      :container-class="'pagination'"
+      :page-class="'page-item waves-effect'"
+     />
   </div>
+  
 </template>
 
 <script>
 import HeaderTitle from '@/components/app/HeaderTitle'
 import StoryModal from '@/components/app/StoryModal'
+import paginationMixin from '@/mixins/pagination.mixin'
 
 export default {
+  mixins: [paginationMixin],
   data: ()=>({
-    stories: [],
-    currentStory: null,
+    previewStories: [],
+    currentStory: 0,
     name: '',
     group: '',
+    stories: [],
     openedModal: false,
-    updateCount: 0,
     currentStories: []
   }),
-  async created() {
+
+  async mounted() {
     this.name = this.$route.params.report
     this.group = this.$route.params.name
 
@@ -52,77 +71,35 @@ export default {
     }
 
     try {
-      if (this.$store.getters.stories) {
-        this.stories = await this.$store.dispatch('fetchPreviewStories', data)
-      }
+      this.previewStories = await this.$store.dispatch('fetchPreviewStories', data)
     } catch(e){}
-    
+
+    this.setupPagination(this.previewStories)
   },
 
-  mounted() {
-
-  },
   methods: {
-
-    async clickHandler() {
-      this.openedModal = true
-    //  this.storiesData = await this.$store.dispatch('fetchStoryForModal')
-    },
-    // async clickHandler(storyName, curIndex) {
-    //   this.openedModal = true
-    //   const curIndexInput = curIndex
-
-    //   try {
-    //     for (let i = 0; i < 2; i++) {
-    //       curIndex += i
-    //       this.currentStories.push({...await this.$store.dispatch('fetchStory', {
-    //         name: this.name,
-    //         group: this.group,
-    //         storyName: this.stories[curIndex].name
-    //       }), curIndex })
-
-    //     }
-    //     console.log(curIndex) // индекс последнего изображения в массиве загруженных изображений
-    //     this.currentStory = this.currentStories[curIndexInput] // из загруженных двух стори отдаем первую
-    //    // this.currentStory = {...await this.$store.dispatch('fetchStory', storyData), curIndex}
-    //   } catch(e){}
+    async clickStoryHandler(idx) {
+      try {
+        if (this.$store.getters.stories && !this.$store.getters.stories.length) {
+          this.stories = await this.$store.dispatch('fetchStories', {
+            name: this.name,
+            group: this.group
+          })
+        }
+      }catch(e){}
       
-
-    // },
-    // async storyUpdate(e, curIndex) {
-
-    //   if (e.keyCode == 39 && curIndex < this.stories.length - 1) {
-
-    //     if (this.currentStories && this.currentStories.length) {
-    //       this.currentStory = this.currentStories[curIndex + 1] // отдаем следующий элемент
-    //      // console.log('gived', this.currentStory)
-    //     }
-
-    //     try {
-    //       curIndex = this.currentStories.length
-    //       for (let i = 0; i < 1; i++) {
-    //         curIndex += i
-    //         this.currentStories.push({...await this.$store.dispatch('fetchStory', {
-    //           name: this.name,
-    //           group: this.group,
-    //           storyName: this.stories[curIndex].name
-    //         }), curIndex })
-    //       }
-    //       console.log(this.currentStories.length)
-    //     } catch(e){}
-    //   } else if(e.keyCode == 37 && curIndex >= 0) {
-
-    //     if (this.currentStories && this.currentStories.length) {
-    //       this.currentStory = this.currentStories[curIndex - 1] // отдаем следующий элемент
-    //      // console.log('gived', this.currentStory)
-    //     }
-    //   } else {
-    //     return
-    //   }
-    // }
+      this.openedModal = true
+      this.currentStory = idx // передаем индекс кликнутого эл-та
+    },
+    test() {
+      this.$refs.zoomer.zoomIn(2);
+    //  console.log(this.$refs.zoomer);
+     // this.$refs.zoomer.zoomIn();
+    }
   },
+
   components: {
-    HeaderTitle, StoryModal
+    HeaderTitle, StoryModal,
   }
 }
 </script>

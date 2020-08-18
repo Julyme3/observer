@@ -1,8 +1,15 @@
 export default {
   state: {
+    previewStories: [],
     stories: []
   },
   mutations: {
+    setPreviewStories(state, previewStories) {
+      state.previewStories = previewStories
+    },
+    clearPreviewStories(state) {
+      state.previewStories = []
+    },
     setStories(state, stories) {
       state.stories = stories
     },
@@ -13,8 +20,20 @@ export default {
   actions: {
     async fetchPreviewStories({commit}, {name, group}) {
       try {
-        const objStories = await (await fetch(`http://observer.dpl.wb.ru:8081/stories?name=${name}&group=${group}`)).json()
-        const stories = objStories.stories || []
+        const objStories = await (await fetch(`http://observer.dpl.wb.ru:8081/short-diffs?name=${name}&group=${group}`)).json()
+        const stories = objStories.shortDiffSnapshots || []
+        commit('setPreviewStories', stories)
+        return stories
+      } catch(e) {
+        commit('setError', e)
+        commit('clearPreviewStories')
+        throw e
+      }
+    },
+    async fetchStories({commit}, {name, group}) {
+      try {
+        const objStories = await (await fetch(`http://observer.dpl.wb.ru:8081/diffs?name=${name}&group=${group}`)).json()
+        const stories = objStories.diffSnapshots || []
         commit('setStories', stories)
         return stories
       } catch(e) {
@@ -23,19 +42,7 @@ export default {
         throw e
       }
     },
-    async fetchStory({commit}, {name, group, storyName}) {
-      try {
-        return await (await fetch(`http://observer.dpl.wb.ru:8081/stories?name=${name}&group=${group}&story=${storyName}`)).json() || {}
-      } catch(e){
-        commit('setError', e)
-        throw e
-      }
-    },
-    async fetchStoryForModal({commit}) {
-      try {
-
-      } catch(e){}
-    }
+    
   },
   getters: {
     stories(state) {

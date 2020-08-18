@@ -1,60 +1,83 @@
 <template>
-  <!-- Modal Structure v-on:keyup="onBtnNavigation(storyData.curIndex, $event)" -->
-  <div >
-    <div id="modal1" class="modal" ref="modal">
-      <div>
-        <VueSlickCarousel v-bind="settings">
-          <div class="img"><img src="https://cdn.pixabay.com/photo/2015/04/23/22/00/tree-736885__340.jpg"></div>
-          <div class="img"><img src="https://cdn.pixabay.com/photo/2015/12/01/20/28/road-1072823__340.jpg"></div>
-          <div class="img"><img src="https://cdn.pixabay.com/photo/2015/09/09/16/05/forest-931706__340.jpg"></div>
-          <div class="img"><img src="https://cdn.pixabay.com/photo/2015/06/19/21/24/the-road-815297__340.jpg"></div>
-
-          
-          <div class="img"><img src="https://cdn.pixabay.com/photo/2016/01/08/11/57/butterfly-1127666__340.jpg"></div>
-          <div class="img"><img src="https://cdn.pixabay.com/photo/2016/11/14/04/45/elephant-1822636__340.jpg"></div>
-          <div class="img"><img src="https://cdn.pixabay.com/photo/2018/02/08/22/27/flower-3140492__340.jpg"></div>
-          <div class="img"><img src="https://cdn.pixabay.com/photo/2013/07/18/10/56/railroad-tracks-163518__340.jpg"></div>
-        </VueSlickCarousel>
-      </div>
-      <!-- <div class="modal-header">
-        <div class="wrap-name">
-          <h6 class="truncate title">Story {{ this.id }}</h6>
-          <span>Desciption</span>
+  <div id="modal1" class="modal" ref="modal">
+    <VueSlickCarousel v-bind="settings" ref="carousel" @init="test1" @afterChange="test1">
+      <div v-for="(diff, idx) in stories" :key="diff.name">
+        <div class="modal-header">
+          <div class="wrap-name">
+            <h6 class="truncate title">Story {{idx + 1}}/{{stories.length}}: {{ diff.id }}</h6>
+          </div>
+          <span class="modal-close"></span>
         </div>
-        <div class="view">
-          <div class="view-item">
-            <div class="view-title">VIEW</div>
-            <div class="buttons-view">
-              <i v-for="imgItem in imgItems" :key="imgItem.name"
-                class="material-icons small tooltipped" ref="tooltipped" @click="imgItem.state = !imgItem.state"
-                data-position="bottom" data-tooltip="some text"
-              >
-                {{ imgItem.state ? "remove" : "add"}}
-                <span class="icon-text">{{imgItem.cyrilithic}}</span>  
-              </i>
+          <div class="modal-content">
+            <div class="view">
+              <input
+                id="etalon" 
+                type="checkbox"
+                v-model="checkedEtalon" 
+                value="checked" 
+                class="view-item" 
+              />
+              <label class="waves-effect waves-light btn" for="etalon">Etalon</label>
+              <input 
+                id="test"
+                type="checkbox" 
+                v-model="checkedTest"
+                value="checked" 
+                class="view-item" 
+              />
+              <label class="waves-effect waves-light btn" for="test">Test</label>
+              <input 
+                id="diff"
+                type="checkbox" 
+                v-model="checkedDiff"
+                value="checked" 
+                class="view-item" 
+              />
+              <label class="waves-effect waves-light btn" for="diff">Diff</label>
             </div>
+            <div class="desc">
+              <p class="truncate">{{ diff.server.test }}</p>
+              <p class="truncate">{{ diff.url }}</p>
+              <p>{{ diff.browser.osName }} | {{ diff.browser.browserName }} | {{ diff.browser.resolution }}</p>
+            </div>
+            
           </div>
-          <div class="view-item">
-            <div class="view-title">DIFF</div>
-            <div class="view-diff"></div>
+          <div><button @click.prevent="test">+</button> <button>-</button></div>
+            <v-zoomer ref="zoomer" class="vue-vue" style="width: 500px; height: 500px; border: solid 1px silver; transform: translate(0px, 0px) scale(1);">
+            <img
+              src="https://cdn.pixabay.com/photo/2016/04/20/19/47/wolf-1341881__340.jpg"
+              style="object-fit: contain; width: 100%; height: 100%;"
+          >     
+          </v-zoomer>
+
+<!-- <v-zoomer ref="zoomer" style="width: 500px; height: 500px; border: solid 1px silver;">
+  <img
+    :src="diff.etalonDiffImage"
+    style="object-fit: contain; width: 100%; height: 100%;"
+  >
+</v-zoomer> -->
+          <!-- <div class="inner-img" v-show="checkedEtalon">
+            <img :src="diff.etalonDiffImage">
+          </div> -->
+           <!-- <div class="inner-img" v-show="checkedEtalon">
+            <img :src="diff.etalonDiffImage">
+          </div> -->
+          <!-- <div class="inner-img" v-show="checkedTest">
+            <img :src="diff.testDiffImage">
           </div>
+          <div class="inner-img" v-show="checkedDiff">
+            <img :src="diff.diffImage">
+          </div> -->
         </div>
-        <span class="modal-close"></span>
-      </div>
-      <div class="modal-content">
-        <div v-for="imgItem in imgItems" :key="imgItem.name"
-          class="inner-img" v-show="imgItem.state">
-          <img :src="imgItem.url">
-        </div>
-      </div> -->
-    </div>
+    </VueSlickCarousel>
   </div>
 </template>
+
 
 <script>
 import VueSlickCarousel from 'vue-slick-carousel'
 export default {
-  props: ['storyData', 'isOpen'],
+  props: ['stories', 'currentStory'],
   name: 'storyModal',
   data: ()=>({
     modal: null,
@@ -62,67 +85,48 @@ export default {
     settings: {
       arrows: true,
       infinite: false,
-      lazyLoad: 'ondemand'
+      lazyLoad: 'progressive'
     },
-    imgItems: [
-      { 
-        url: '',
-        state: true, // включена
-      // text:  state ? 'Скрыть тест' : 'Показать тест'
-        name: 'testDiffImage',
-        cyrilithic: 'Эталон'
-      },
-      {
-        url: '',
-        state: true, // включена
-        // text:  state ? 'Скрыть эталон' : 'Показать эталон'
-        name: 'etalonDiffImage',
-        cyrilithic: 'Тест'
-      },
-      {
-        url: '',
-        state: true, // включена
-        // text:  state ? 'Скрыть различия' : 'Показать различия'
-        name: 'diffImage',
-        cyrilithic: 'Разница'
-      }
-    ],
+    checkedDiff: true,
+    checkedEtalon: true,
+    checkedTest: true,
     tolltip: null,
+    idZoomer: 0,
   }),
   mounted() {
-    console.log('mounted')
-    this.modal = M.Modal.init(this.$refs["modal"], {
-      opacity: 0.9
-    })
-   // this.tooltip = this.$refs.tooltipped.forEach(item => { M.Tooltip.init(item) })
+    //debugger;
+    setTimeout(() => {
+      this.modal = M.Modal.init(this.$refs["modal"], {
+        opacity: 0.9,
+        onOpenStart: () => {
+          this.$refs.carousel.goTo(this.currentStory)
+        }
+      }).open();
+    }, 0);
   },
   beforeDestroy() {
-    console.log('destroy')
     if (this.modal && this.modal.destroy) {
       this.modal.destroy()
     }
-    // if (this.tooltip && this.tooltip.destroy) {
-    //   this.tooltip.destroy()
-    // }
-  },
-  watch: {
-    storyData() {
-     // console.log('taked', this.storyData)
-      const arrayImgs = [this.storyData.etalonDiffImage, this.storyData.testDiffImage, this.storyData.diffImage];
-      this.imgItems.forEach((item, i)=> {
-        item.url = arrayImgs[i]
-      })
-      this.id = this.storyData.id
-    }
+    this.$store.commit('clearStories') // когда закрываем страницу со списком сторис то очищаем геттер со сторис
   },
   methods: {
-    // onBtnNavigation(index, event) {
-    //   console.log(event)
-    //   this.$emit('updated', event, index)
-    // }
+    test() {
+      this.$refs.zoomer.zoomIn(2);
+    //  console.log(this.$refs.zoomer);
+     // this.$refs.zoomer.zoomIn();
+    },
+    test1() {
+      const template = ``;
+    }
+  },
+  watch: {
+    currentStory() { // следим за индексом текущей стори
+      return this.currentStory
+    }
   },
   components: { 
-    VueSlickCarousel
+    VueSlickCarousel,
   }
 }
 </script>
@@ -130,15 +134,20 @@ export default {
 <style lang="scss">
 @import '~vue-slick-carousel/dist/vue-slick-carousel.css';
 @import '~vue-slick-carousel/dist/vue-slick-carousel-theme.css';
+//@import '~viewerjs/dist/viewer.css';
 
-img {
-  width: 500px;
-  height: 500px;
-  margin: 0 auto;
-}
+// img {
+//   width: 500px;
+//   height: 500px;
+//   margin: 0 auto;
+// }
 
-.slick-arrow:before {
-  color: black!important;
+.slick-arrow {
+  z-index: 1;
+
+  &:before {
+    color: black!important;
+  }
 }
 
 .slick-prev {
@@ -149,6 +158,19 @@ img {
   right: 0;
 }
 
+.slick-slide {
+  text-align: center;
+
+  > div,
+  > div > div {
+    height: 100%;
+  }
+}
+
+.slick-slider, .slick-list, .slick-track {
+  height: 100%;
+}
+
 .modal {
   width: 90vw;
   height: 90vh;
@@ -157,7 +179,27 @@ img {
 
   &-content {
     display: flex;
-    justify-content: space-around;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+
+    label {
+      display: inline-block;
+      width: 100px;
+      height: 30px;
+      line-height: 30px;
+      color: black;
+      font-size: 14px;
+      text-align: center;
+      cursor: pointer;
+    }
+  }
+
+  &-header {
+    position: relative;
+  }
+
+  .modal-content {
+    padding: 5px 20px;
   }
 }
 .modal-close {
@@ -191,11 +233,13 @@ img {
 .wrap-name {
   max-width: calc(100% - 100px);
   padding: 6px 10px 10px 20px;
+  text-align: left;
   
 }
 
 .title {
   font-weight: bold;
+  margin-bottom: 10px;
 }
 
 .inner-img {
@@ -206,17 +250,17 @@ img {
   font-size: 0;
   width: calc(100% / 3 - #{$offset});
   height: 60vh;
-  overflow: hidden;
+  //overflow: hidden;
 
-  img {
-    display: block;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    height: auto;
-    max-width: 100%;
-  }
+  // img {
+  //   display: block;
+  //   position: absolute;
+  //   top: 50%;
+  //   left: 50%;
+  //   transform: translate(-50%, -50%);
+  //   height: auto;
+  //   max-width: 100%;
+  // }
 }
 
 .inner-img + .inner-img {
@@ -225,12 +269,15 @@ img {
 
 .view {
   display: flex;
-  padding: 0 10px;
   background-color: #fefefe;
   outline: 1px solid rgba(0,0,0,.2);
 
   &-item {
-    padding: 10px;
+    display: none;
+
+    &:not(:checked) + label {
+      background-color: #DFDFDF;
+    }
   }
 
   &-title {
@@ -256,5 +303,16 @@ img {
     display: block;
       font-size: 14px;
   }
+}
+
+.desc {
+  width: 100%;
+  text-align: left;
+
+    p {
+      font-size: 16px;
+      color: rgba(0,0,0,.55);
+      margin: 2px 0;
+    }
 }
 </style>

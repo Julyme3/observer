@@ -4,8 +4,10 @@ import App from './App.vue'
 import './registerServiceWorker'
 import router from './router'
 import store from './store'
+import Paginate from 'vuejs-paginate'
 import messagesPlugin from '@/utils/messages.plugin'
 import Loader from '@/components/app/Loader'
+import VueZoomer from 'vue-zoomer'
 import 'materialize-css/dist/js/materialize.min.js'
 import firebase from 'firebase/app'
 
@@ -14,8 +16,10 @@ import 'firebase/database'
 
 Vue.config.productionTip = false
 Vue.component('Loader', Loader)
+Vue.component('Paginate', Paginate)
 Vue.use(Vuelidate)
 Vue.use(messagesPlugin)
+Vue.use(VueZoomer)
 //export const eventBus = new Vue()
 
 
